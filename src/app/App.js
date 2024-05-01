@@ -1,15 +1,15 @@
 import React from "react";
-import StoreList from "../components/StoreList";
 import MapContainer from "../components/MapContainer";
+import Header from "../components/Header";
 
 function App() {
+  const [selectedStore, setSelectedStore] = React.useState(null);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Welcome to Adidas Store Finder</h1>
-      </header>
-      <StoreList />
-      <MapContainer />
+      <Header />
+      <MapContainer onSelectStore={setSelectedStore} />
+      {selectedStore && <StoreDetails storeId={selectedStore} />}
     </div>
   );
 }
