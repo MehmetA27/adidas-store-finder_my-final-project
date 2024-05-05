@@ -13,12 +13,12 @@ const mapContainerStyle = {
   height: "100vh",
 };
 const defaultCenter = {
-  lat: 49.450886, // Default center of the map
+  lat: 49.450886, 
   lng: 11.074092,
 };
 
 function distance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth's radius in kilometers
+  const R = 6371; 
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =

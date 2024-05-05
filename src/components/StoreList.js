@@ -15,7 +15,7 @@ const StoreList = () => {
 
   return (
     <div>
-      <h1>Mağazalar Listesi</h1>
+      <h1>Store List</h1>
       <ul>
         {stores.map((store) => (
           <li key={store.id}>

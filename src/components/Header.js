@@ -1,5 +1,5 @@
 import React from "react";
-import adidasLogo from "../assests/adidas-logo.jpeg"; // Adidas logosunu projenize ekleyin
+import adidasLogo from "../assests/adidas-logo.jpeg";
 
 const headerStyle = {
   backgroundColor: "black",
