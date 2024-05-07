@@ -1,12 +1,14 @@
-import storeData from "../data/storeData.json";
+import axios from "axios";
 
-const getStores = async () => {
-  return Promise.resolve(storeData.stores);
+const baseUrl = "https://www.adidas.com/api/stores";
+
+export const fetchStores = async (latitude, longitude) => {
+  try {
+    const response = await axios.get(
+      `${baseUrl}?latitude=${latitude}&longitude=${longitude}`
+    );
+    return response.data.content;
+  } catch (error) {
+    console.error("Error fetching stores:", error);
+  }
 };
-
-const getStoreById = async (id) => {
-  const store = storeData.stores.find((store) => store.id === id);
-  return Promise.resolve(store); 
-};
-
-export { getStores, getStoreById };

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   GoogleMap,
   Marker,
@@ -6,53 +6,62 @@ import {
   useLoadScript,
   Autocomplete,
 } from "@react-google-maps/api";
-import storeData from "../data/storeData.json";
+import "../styles/InfoWindowStyles.css";
+import { fetchStores } from "../api/StoreAPI"; // fetchStores fonksiyonunu import ediyoruz
 
 const mapContainerStyle = {
-  width: "100vw",
-  height: "100vh",
+  width: "99vw",
+  height: "70vh",
 };
+
 const defaultCenter = {
-  lat: 49.450886, 
+  lat: 49.450886,
   lng: 11.074092,
 };
 
-function distance(lat1, lon1, lat2, lon2) {
-  const R = 6371; 
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+function formatHours(hours, minutes) {
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
-function filterStores(center, maxDistance = 10) {
-  // Max distance in kilometers
-  return storeData.stores.filter((store) => {
-    const dist = distance(
-      center.lat,
-      center.lng,
-      store.location.latitude,
-      store.location.longitude
-    );
-    return dist <= maxDistance;
-  });
+function OpeningHours({ hours }) {
+  return (
+    <>
+      <div className="info-content">Opening Hours:</div>
+      {Object.entries(hours).map(([day, times]) => (
+        <div key={day} className="info-content">
+          {day.charAt(0).toUpperCase() + day.slice(1)}:{" "}
+          {formatHours(times.startHours, times.startMinutes)} -{" "}
+          {formatHours(times.endHours, times.endMinutes)}
+        </div>
+      ))}
+    </>
+  );
 }
 
 function MapContainer() {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyAFyZSO9Qdf3Ri7NutgWLJoM-C2VLTDu5w", // API keyinizi buraya ekleyin
-    libraries: ["places"], // Otomatik tamamlama için gerekli kütüphane
+    googleMapsApiKey: "AIzaSyAFyZSO9Qdf3Ri7NutgWLJoM-C2VLTDu5w",
+    libraries: ["places"],
   });
 
   const [selectedStore, setSelectedStore] = useState(null);
+  const [stores, setStores] = useState([]);
   const [center, setCenter] = useState(defaultCenter);
+  const [error, setError] = useState("");
   const autocompleteRef = useRef(null);
+
+  useEffect(() => {
+    if (center.lat && center.lng) {
+      fetchStores(center.lat, center.lng)
+        .then(setStores)
+        .catch((e) => {
+          console.error("Error fetching stores:", e);
+          setStores([]);
+        });
+    }
+  }, [center]);
 
   const handleLoadAutocomplete = (autocomplete) => {
     autocompleteRef.current = autocomplete;
@@ -60,19 +69,20 @@ function MapContainer() {
 
   const handlePlaceChanged = () => {
     const place = autocompleteRef.current.getPlace();
-    if (place.geometry) {
+    if (place && place.geometry) {
       setCenter({
         lat: place.geometry.location.lat(),
         lng: place.geometry.location.lng(),
       });
+      setError("");
+    } else {
+      setError("You entered invalid location.");
     }
   };
 
   const handleMarkerClick = useCallback((store) => {
     setSelectedStore(store);
   }, []);
-
-  const nearbyStores = filterStores(center);
 
   if (!isLoaded) return <div>Loading...</div>;
   if (loadError) return <div>Error loading maps</div>;
@@ -98,35 +108,37 @@ function MapContainer() {
           }}
         />
       </Autocomplete>
+      {error && (
+        <div style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
+          {error}
+        </div>
+      )}
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         zoom={10}
         center={center}
         onClick={() => setSelectedStore(null)}
       >
-        {nearbyStores.map((store) => (
+        {stores.map((store) => (
           <Marker
             key={store.id}
             position={{
-              lat: store.location.latitude,
-              lng: store.location.longitude,
+              lat: store.latitude,
+              lng: store.longitude,
             }}
             onClick={() => handleMarkerClick(store)}
           >
             {selectedStore && selectedStore.id === store.id && (
               <InfoWindow onCloseClick={() => setSelectedStore(null)}>
-                <div>
-                  <h2>{store.name}</h2>
-                  <p>
-                    {store.location.street}, {store.location.city}
+                <div className="info-window">
+                  <h2 className="info-title">{selectedStore.name}</h2>
+                  <p className="info-content">
+                    {selectedStore.street}, {selectedStore.city}
                   </p>
-                  <p>Phone: {store.contact.phoneNumber}</p>
-                  <div>Opening Hours:</div>
-                  {store.openingHours.map((hour, index) => (
-                    <div key={index}>
-                      {hour.day}: {hour.start} - {hour.end}
-                    </div>
-                  ))}
+                  <p className="info-content">
+                    Phone: {selectedStore.phoneNumber}
+                  </p>
+                  <OpeningHours hours={selectedStore.openingHours} />
                 </div>
               </InfoWindow>
             )}
