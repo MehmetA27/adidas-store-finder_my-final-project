@@ -7,7 +7,7 @@ import {
   Autocomplete,
 } from "@react-google-maps/api";
 import "../styles/InfoWindowStyles.css";
-import { fetchStores } from "../api/StoreAPI"; // fetchStores fonksiyonunu import ediyoruz
+import { fetchStores } from "../api/StoreAPI"; 
 
 const mapContainerStyle = {
   width: "99vw",

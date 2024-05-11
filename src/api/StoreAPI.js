@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseUrl = "https://www.adidas.com/api/stores";
+const baseUrl = "https://www.adidas.de/api/stores";
 
 export const fetchStores = async (latitude, longitude) => {
   try {
